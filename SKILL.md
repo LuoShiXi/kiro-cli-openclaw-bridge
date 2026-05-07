@@ -35,7 +35,7 @@ which kiro-cli  # 验证安装
 ### Step 2: 认证 kiro-cli
 
 ```bash
-kiro-cli auth
+kiro-cli login
 # 按提示完成登录认证，确保能正常使用
 # 验证：
 kiro-cli acp --help  # 应显示帮助信息
@@ -208,7 +208,7 @@ Bridge 透传 kiro-cli 的内置能力，所有操作受限于 `--cwd` 指定的
 
 | 问题 | 解决方案 |
 |------|---------|
-| Bridge 启动但无响应 | 确认 `kiro-cli auth` 已完成；检查 `--cwd` 指向有效目录 |
+| Bridge 启动但无响应 | 确认 `kiro-cli login` 已完成；检查 `--cwd` 指向有效目录 |
 | Agent 卡在 tool_call | stdout 缓冲区已设为 10MB；检查日志是否有 `readline buffer overflow` |
 | OpenClaw 连接被拒 | `curl http://127.0.0.1:18788/health` 验证 bridge 运行中 |
 | 超时错误 | 增大 `--timeout 600`；复杂任务需要更多时间 |
