@@ -220,7 +220,7 @@ Bridge 透传 kiro-cli 的内置能力，所有操作受限于 `--cwd` 指定的
 |------|------|
 | Windows | 支持，需安装 Windows 版 kiro-cli，可打包为 `.exe` |
 | Windows (WSL) | 支持，自动检测 WSL 环境 |
-| macOS ARM (M1/M2/M3) | 支持，自动查找 `/opt/homebrew/bin/kiro-cli` |
+| macOS ARM (Apple Silicon) | 支持，自动查找 `/opt/homebrew/bin/kiro-cli` |
 | macOS Intel | 支持，自动查找 `/usr/local/bin/kiro-cli` |
 | Linux | 支持，通过 PATH 或 `~/.local/bin/kiro-cli` 查找 |
 
