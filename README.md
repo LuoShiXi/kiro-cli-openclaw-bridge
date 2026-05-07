@@ -139,12 +139,13 @@ Bridge 透传 kiro-cli 的内置能力，所有操作受限于 `--cwd` 指定的
 
 | 平台 | 说明 |
 |------|------|
-| Windows (WSL) | 通过 WSL 运行，自动检测 WSL 环境 |
+| Windows | 支持，需安装 Windows 版 kiro-cli，可打包为 `.exe` |
+| Windows (WSL) | 支持，自动检测 WSL 环境 |
 | macOS ARM (M1/M2/M3) | 支持，自动查找 `/opt/homebrew/bin/kiro-cli` |
 | macOS Intel | 支持，自动查找 `/usr/local/bin/kiro-cli` |
 | Linux | 支持，通过 PATH 或 `~/.local/bin/kiro-cli` 查找 |
 
-> **注意**：Windows 原生不支持，需通过 WSL 运行。PyInstaller 打包的二进制与构建平台绑定，需在各平台分别构建。
+> **注意**：PyInstaller 不支持交叉编译，打包产物只能在构建时的操作系统上运行。如需在不同平台使用，需在对应平台（Windows / macOS / Linux）上分别执行 `./build.sh` 构建。
 
 ## 项目结构
 
