@@ -226,12 +226,22 @@ Bridge 透传 kiro-cli 的内置能力，所有操作受限于 `--cwd` 指定的
 
 ## 构建打包
 
+**Linux / macOS / WSL：**
+
 ```bash
 ./build.sh        # 构建单文件可执行程序 → dist/acp-bridge (~15MB)
 ./build.sh clean  # 清理构建产物
 ```
 
-构建后的二进制无需 Python 环境即可运行。在 Windows 上构建时产物为 `dist/acp-bridge.exe`。
+**Windows（PowerShell / CMD）：**
+
+```powershell
+pip install -r requirements.txt
+pyinstaller acp_bridge.spec --clean --noconfirm
+.\dist\acp-bridge.exe --cwd C:\your\project
+```
+
+构建后的二进制无需 Python 环境即可运行。
 
 > PyInstaller 不支持交叉编译，需在各平台（Windows / macOS / Linux）上分别构建。
 
