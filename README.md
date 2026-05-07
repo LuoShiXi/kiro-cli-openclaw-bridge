@@ -33,14 +33,24 @@ python -m acp_openai_bridge.main --cwd /your/project
 
 ### 方式二：构建为单文件可执行程序
 
+**Linux / macOS / WSL：**
+
 ```bash
 ./build.sh
 ./dist/acp-bridge --cwd /your/project
 ```
 
-构建产物 `dist/acp-bridge`（~15MB），无需 Python 环境即可运行。在 Windows 上构建时产物为 `dist/acp-bridge.exe`。
+**Windows（PowerShell / CMD）：**
 
-> **注意**：PyInstaller 不支持交叉编译，打包产物只能在构建时的操作系统上运行。如需在不同平台使用，需在对应平台（Windows / macOS / Linux）上分别执行 `./build.sh` 构建。
+```powershell
+pip install -r requirements.txt
+pyinstaller acp_bridge.spec --clean --noconfirm
+.\dist\acp-bridge.exe --cwd C:\your\project
+```
+
+构建产物约 15MB，无需 Python 环境即可运行。
+
+> **注意**：PyInstaller 不支持交叉编译，打包产物只能在构建时的操作系统上运行。如需在不同平台使用，需在对应平台（Windows / macOS / Linux）上分别执行构建。
 
 ### 验证运行
 
