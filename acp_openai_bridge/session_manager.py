@@ -20,23 +20,29 @@ class SessionManager:
     and registering the session queue for notification routing.
     """
 
-    MAX_TURNS = 20  # 超过此轮次自动创建新 session
+    # Keywords indicating context window overflow in error messages
+    CONTEXT_OVERFLOW_KEYWORDS = (
+        "context", "token", "limit", "overflow", "too long",
+        "maximum", "exceeded", "capacity", "truncat",
+    )
 
     def __init__(self, writer: JSONRPCWriter, reader: ACPReader) -> None:
         self._writer = writer
         self._reader = reader
         self._session_id: str | None = None
         self._cwd: str | None = None
-        self._turn_count: int = 0
 
-    async def increment_turn(self) -> None:
-        """增加轮次计数，超限时自动重建 session。"""
-        self._turn_count += 1
-        if self._turn_count >= self.MAX_TURNS and self._cwd:
-            logger.info("Turn count %d reached limit, creating new session", self._turn_count)
-            if self._session_id:
-                self._reader.unregister_session(self._session_id)
-            await self.create_session(self._cwd)
+    def is_context_overflow_error(self, response: dict) -> bool:
+        """判断 JSON-RPC 错误是否为上下文溢出。"""
+        error = response.get("error", {})
+        msg = (error.get("message", "") + " " + str(error.get("data", ""))).lower()
+        return any(kw in msg for kw in self.CONTEXT_OVERFLOW_KEYWORDS)
+
+    async def reset_session(self) -> str:
+        """重建 session（上下文溢出时调用）。"""
+        if self._session_id:
+            self._reader.unregister_session(self._session_id)
+        return await self.create_session(self._cwd)
 
     async def create_session(self, cwd: str) -> str:
         """创建新会话，返回 sessionId。
@@ -79,9 +85,8 @@ class SessionManager:
         # Register the session queue in ACPReader for notification routing
         self._reader.register_session(session_id)
 
-        # Store the session id and reset turn count
+        # Store the session id
         self._session_id = session_id
-        self._turn_count = 0
         logger.info("Created ACP session: %s", session_id)
 
         return session_id

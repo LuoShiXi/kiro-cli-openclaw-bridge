@@ -86,7 +86,6 @@ async def chat_completions(request: Request):
             },
         )
         logger.info("session/prompt sent, rpc_id=%s", rpc_id)
-        await session_manager.increment_turn()
     except Exception as exc:
         logger.error("Failed to send session/prompt: %s", exc)
         error = ResponseTranslator.to_error_response(
@@ -116,6 +115,7 @@ async def chat_completions(request: Request):
             request_id=translated.request_id,
             response_future=response_future,
             process_manager=process_manager,
+            session_manager=session_manager,
             session_id=translated.session_id,
             config=config,
         )
@@ -126,6 +126,7 @@ async def chat_completions(request: Request):
             request_id=translated.request_id,
             response_future=response_future,
             process_manager=process_manager,
+            session_manager=session_manager,
             session_id=translated.session_id,
             config=config,
         )
@@ -137,6 +138,7 @@ async def _handle_streaming(
     request_id: str,
     response_future: asyncio.Future,
     process_manager,
+    session_manager,
     session_id: str,
     config,
 ) -> StreamingResponse:
@@ -160,6 +162,15 @@ async def _handle_streaming(
                     await _send_cancel(process_manager, session_id)
                     return
                 yield chunk
+            # After stream ends, check for context overflow
+            if response_future.done():
+                try:
+                    result = response_future.result()
+                    if isinstance(result, dict) and session_manager.is_context_overflow_error(result):
+                        logger.info("Context overflow detected in streaming, resetting session")
+                        await session_manager.reset_session()
+                except Exception:
+                    pass
         except asyncio.CancelledError:
             logger.info("Streaming cancelled, sending session/cancel")
             await _send_cancel(process_manager, session_id)
@@ -186,6 +197,7 @@ async def _handle_non_streaming(
     request_id: str,
     response_future: asyncio.Future,
     process_manager,
+    session_manager,
     session_id: str,
     config,
 ) -> JSONResponse:
@@ -240,6 +252,18 @@ async def _handle_non_streaming(
         rpc_error = response["error"]
         error_msg = rpc_error.get("message", "Unknown ACP error")
         logger.error("ACP returned JSON-RPC error: %s", rpc_error)
+
+        # Context overflow: reset session and notify user
+        if session_manager.is_context_overflow_error(response):
+            logger.info("Context overflow detected, resetting session")
+            await session_manager.reset_session()
+            error = ResponseTranslator.to_error_response(
+                message="对话上下文已达到限制，已自动创建新会话。请重新发送您的问题。",
+                error_type="server_error",
+                code="context_overflow",
+            )
+            return JSONResponse(content=error, status_code=400)
+
         error = ResponseTranslator.to_error_response(
             message=error_msg,
             error_type="server_error",
@@ -446,7 +470,6 @@ async def anthropic_messages(request: Request):
                 "prompt": [{"type": "text", "text": user_content}],
             },
         )
-        await session_manager.increment_turn()
     except Exception as exc:
         logger.error("Failed to send session/prompt: %s", exc)
         return JSONResponse(
