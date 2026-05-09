@@ -179,7 +179,7 @@ Bridge 透传 kiro-cli 的内置能力，所有操作受限于 `--cwd` 指定的
 
 ## License
 
-MIT
+[CC BY-NC 4.0](https://creativecommons.org/licenses/by-nc/4.0/) — 允许自由使用和修改，禁止商业用途。
 
 ## 免责声明
 
