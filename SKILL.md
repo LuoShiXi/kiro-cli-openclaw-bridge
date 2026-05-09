@@ -248,3 +248,13 @@ pyinstaller acp_bridge.spec --clean --noconfirm
 ## 项目地址
 
 - GitHub：https://github.com/LuoShiXi/kiro-cli-openclaw-bridge
+
+## 免责声明
+
+本项目为非官方社区工具，与 Amazon Web Services (AWS)、Kiro 或其关联公司无任何关联、认可或赞助关系。
+
+Kiro CLI 受 [AWS Customer Agreement](https://aws.amazon.com/agreement/) 和 [AWS Intellectual Property License](https://aws.amazon.com/legal/aws-ip-license-terms/) 约束。使用本工具前，请确保您已阅读并遵守相关服务条款。
+
+本工具仅作为本地开发辅助用途，用户需使用自己的 Kiro CLI 认证账号，并对自身使用行为承担全部责任。作者不对因使用本工具而产生的任何违规、损失或法律责任负责。
+
+如有疑问，请联系 Kiro 官方确认您的使用场景是否符合其服务条款。
