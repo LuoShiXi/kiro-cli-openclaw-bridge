@@ -60,7 +60,26 @@ async def chat_completions(request: Request):
         )
         return JSONResponse(content=error, status_code=502)
 
-    # 3. Translate the request
+    # 3. Detect new conversation: reset session only when messages contain
+    #    a single user message (no history yet). This way, continuing a
+    #    conversation keeps the ACP session so kiro remembers context.
+    messages = body.get("messages") or []
+    user_messages = [m for m in messages if m.get("role") == "user"]
+    is_new_conversation = len(user_messages) <= 1
+    if is_new_conversation:
+        try:
+            await session_manager.reset_session()
+            logger.info("New conversation detected, created fresh session: %s", session_manager.session_id)
+        except Exception as exc:
+            logger.error("Failed to reset session: %s", exc)
+            error = ResponseTranslator.to_error_response(
+                message="Failed to create new session",
+                error_type="server_error",
+                code="session_error",
+            )
+            return JSONResponse(content=error, status_code=502)
+
+    # 4. Translate the request
     try:
         translated = RequestTranslator.translate(body, session_manager.session_id)
     except ValueError as exc:
@@ -461,7 +480,21 @@ async def anthropic_messages(request: Request):
     is_stream = body.get("stream", False)
     msg_id = f"msg_{uuid.uuid4().hex[:24]}"
 
-    # 4. Send to ACP
+    # 4. Detect new conversation: only reset session when there's a single user message
+    user_messages = [m for m in messages if m.get("role") == "user"]
+    is_new_conversation = len(user_messages) <= 1
+    if is_new_conversation:
+        try:
+            await session_manager.reset_session()
+            logger.info("New conversation detected, created fresh session: %s", session_manager.session_id)
+        except Exception as exc:
+            logger.error("Failed to reset session: %s", exc)
+            return JSONResponse(
+                content={"type": "error", "error": {"type": "api_error", "message": "Failed to create new session"}},
+                status_code=502,
+            )
+
+    # 5. Send to ACP
     try:
         rpc_id = await process_manager.writer.send_request(
             "session/prompt",

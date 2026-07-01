@@ -50,7 +50,7 @@ class RequestTranslator:
             [m.get("role") for m in messages],
         )
         for i, msg in enumerate(messages):
-            content = msg.get("content", "")
+            content = msg.get("content") or ""
             content_len = len(content) if isinstance(content, str) else sum(
                 len(b.get("text", "")) for b in content if isinstance(b, dict)
             )
@@ -61,7 +61,15 @@ class RequestTranslator:
             )
 
         user_content = RequestTranslator.extract_user_message(messages)
-        content = [{"type": "text", "text": user_content}]
+        system_content = RequestTranslator.extract_system_message(messages)
+        
+        # Build prompt with system message if present
+        if system_content:
+            full_content = system_content + "\n\n" + user_content
+        else:
+            full_content = user_content
+        
+        content = [{"type": "text", "text": full_content}]
         is_stream = openai_request.get("stream", False)
         request_id = f"chatcmpl-{uuid4()}"
 
@@ -106,3 +114,17 @@ class RequestTranslator:
                 return str(content)
 
         raise ValueError("No user message found in messages")
+
+    @staticmethod
+    def extract_system_message(messages: list[dict]) -> str:
+        """Extract system message content if present."""
+        for message in messages:
+            if message.get("role") == "system":
+                content = message.get("content") or ""
+                if isinstance(content, str):
+                    return content
+                if isinstance(content, list):
+                    return " ".join(
+                        b.get("text", "") for b in content if isinstance(b, dict) and b.get("type") == "text"
+                    )
+        return ""
